@@ -1,0 +1,13 @@
+server:
+  port: 8086
+
+spring:
+  application:
+    name: video-chat-recommendation
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8010/eureka
+
+token-secret-key: nc*De*WD?788OK.n*5YRwefodikjedwoikdwnoedoidweoniedwonnodedwenodewoidweonidewnow
