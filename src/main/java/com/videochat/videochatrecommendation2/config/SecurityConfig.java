@@ -23,21 +23,20 @@ public class SecurityConfig implements WebMvcConfigurer {
     }
 
     @Bean
-    protected SecurityFilterChain configure(HttpSecurity http) throws Exception {
-        http.csrf().disable()
+    public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
+        // We don't need CSRF for JWT based authentication
+        return httpSecurity
+                .csrf().disable()
                 .cors()
                 .and()
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .and()
                 .authorizeHttpRequests()
+//                .requestMatchers(permittedEndpoints()).permitAll()
                 .anyRequest().permitAll()
-//                .authenticated()
                 .and()
-                .sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .and()
-                .addFilterBefore(jwtRequestTokenVerifier, UsernamePasswordAuthenticationFilter.class);
-
-        http.headers().frameOptions().disable();
-        return http.build();
+                .addFilterBefore(jwtRequestTokenVerifier, UsernamePasswordAuthenticationFilter.class)
+                .build();
     }
 
     @Override

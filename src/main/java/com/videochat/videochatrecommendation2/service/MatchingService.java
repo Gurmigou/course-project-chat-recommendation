@@ -41,6 +41,9 @@ public class MatchingService {
 
     // CompletableFuture will contain the peer of current user
     public CompletableFuture<User> findPeerForUser(User user) {
+        if (waitingUserNotification.containsKey(user.username()))
+            throw new IllegalStateException("User is already in the waiting queue");
+
         CompletableFuture<User> userNotification = new CompletableFuture<>();
         waitingUserNotification.put(user.username(), userNotification);
 
@@ -85,7 +88,7 @@ public class MatchingService {
                 if (secondAttemptPeer.isPresent())
                     notifyMyselfAndPeer(user, secondAttemptPeer.get());
                 else {
-                    Optional<User> randomUser = searchForRandomUserToJustStart();
+                    Optional<User> randomUser = searchForRandomUserToJustStart(user);
 
                     if (randomUser.isPresent())
                         notifyMyselfAndPeer(user, randomUser.get());
@@ -104,11 +107,11 @@ public class MatchingService {
         waitingUserNotification.get(peer.username()).complete(me);
     }
 
-    private Optional<User> searchForRandomUserToJustStart() {
+    private Optional<User> searchForRandomUserToJustStart(User user) {
         usersToJustStartLock.lock();
         User peer = usersToJustStart.poll();
 
-        if (peer == null) {
+        if (peer == null || peer.username().equals(user.username())) {
             usersToJustStartLock.unlock();
             return Optional.empty();
         }
@@ -129,11 +132,13 @@ public class MatchingService {
         int maxScore = 0;
 
         for (var peer : waitingUsers) {
-            int matchScore = calculateScore(user, peer);
+            if (!peer.username().equals(user.username())) {
+                int matchScore = calculateScore(user, peer);
 
-            if (matchScore > maxScore) {
-                maxScore = matchScore;
-                maxPeer = peer;
+                if (matchScore > maxScore) {
+                    maxScore = matchScore;
+                    maxPeer = peer;
+                }
             }
         }
 

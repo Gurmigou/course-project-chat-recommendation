@@ -28,6 +28,8 @@ public class WaitingRoomManager {
     public ChatRoom joinRoom(String username) throws ExecutionException, InterruptedException, TimeoutException {
         var user = userApiService.getUserByUsername(username);
 
+        System.out.println("Triggered by " + username + " at " + System.nanoTime());
+
         CompletableFuture<User> peerNotification = matchingService.findPeerForUser(user);
         var peer = peerNotification.get(2, TimeUnit.MINUTES);
 

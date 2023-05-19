@@ -15,7 +15,16 @@ public class ChatRoomManager {
 
     public ChatRoom createRoomIfNotExistsAndGet(String myUsername, String peerUsername) {
         var key = BiPair.of(myUsername, peerUsername);
-        return activeRooms.computeIfAbsent(key, k -> new ChatRoom(chatId.incrementAndGet(), myUsername, peerUsername));
+        activeRooms.putIfAbsent(key, new ChatRoom(chatId.incrementAndGet(), myUsername, peerUsername));
+        return getCorrectChatRoom(myUsername, activeRooms.get(key));
+    }
+
+    private ChatRoom getCorrectChatRoom(String myUsername, ChatRoom chatRoom) {
+        if (chatRoom.getYourUsername().equals(myUsername)) {
+            return chatRoom;
+        } else {
+            return new ChatRoom(chatRoom.getChatId(), chatRoom.getPeerUsername(), chatRoom.getYourUsername());
+        }
     }
 
     public ChatRoom removeChatRoom(String myUsername, String peerUsername) {

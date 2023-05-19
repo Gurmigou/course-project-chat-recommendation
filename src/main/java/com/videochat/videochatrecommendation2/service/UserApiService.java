@@ -9,7 +9,7 @@ import org.springframework.web.client.RestTemplate;
 // TODO implement RabbitMQ
 @Service
 public class UserApiService {
-    private final static String USER_SERVICE_URL = "http://user-service/api/v1/user";
+    private final static String USER_SERVICE_URL = "http://video-chat-user/api/v1/user";
     private final RestTemplate restTemplate;
 
     @Autowired
