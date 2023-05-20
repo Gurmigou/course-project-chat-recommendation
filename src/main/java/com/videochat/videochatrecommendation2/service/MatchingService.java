@@ -2,6 +2,7 @@ package com.videochat.videochatrecommendation2.service;
 
 import com.videochat.videochatrecommendation2.model.Interests;
 import com.videochat.videochatrecommendation2.model.User;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
@@ -10,7 +11,7 @@ import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.ReentrantLock;
 
-@Service
+@Component
 public class MatchingService {
     private final static int HIGH = 3;
     private final static int MEDIUM = 2;
@@ -103,8 +104,8 @@ public class MatchingService {
     }
 
     private void notifyMyselfAndPeer(User me, User peer) {
-        waitingUserNotification.get(me.username()).complete(peer);
-        waitingUserNotification.get(peer.username()).complete(me);
+        waitingUserNotification.remove(me.username()).complete(peer);
+        waitingUserNotification.remove(peer.username()).complete(me);
     }
 
     private Optional<User> searchForRandomUserToJustStart(User user) {

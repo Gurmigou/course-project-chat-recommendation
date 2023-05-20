@@ -28,6 +28,7 @@ public class UserMatcherController {
             ChatRoom chatRoom = waitingRoomManager.joinRoom(principal.getName());
             return ResponseEntity.ok().body(chatRoom);
         } catch (ExecutionException | InterruptedException | TimeoutException e) {
+            e.printStackTrace();
             return ResponseEntity
                     .badRequest()
                     .body(e.getMessage());
@@ -36,13 +37,27 @@ public class UserMatcherController {
 
     @PostMapping("/end-chat")
     public ResponseEntity<?> endChatRequest(Principal principal, @RequestParam String peerUsername) {
-        var endedChatRoom = waitingRoomManager.endRoom(principal.getName(), peerUsername);
-        return ResponseEntity.ok().body("Successfully ended chat room " + endedChatRoom.getChatId());
+        try {
+           waitingRoomManager.endRoom(principal.getName(), peerUsername);
+            return ResponseEntity.ok().body("Successfully ended chat room");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity
+                    .badRequest()
+                    .body(e.getMessage());
+        }
     }
 
     @PostMapping("/terminate")
     public ResponseEntity<?> terminateRequest(Principal principal) {
-        waitingRoomManager.terminateUserSession(principal.getName());
-        return ResponseEntity.ok().body("Successfully terminated user session");
+        try {
+            waitingRoomManager.terminateUserSession(principal.getName());
+            return ResponseEntity.ok().body("Successfully terminated user session");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity
+                    .badRequest()
+                    .body(e.getMessage());
+        }
     }
 }

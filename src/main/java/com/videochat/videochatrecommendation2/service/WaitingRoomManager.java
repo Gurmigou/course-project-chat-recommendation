@@ -5,6 +5,8 @@ import com.videochat.videochatrecommendation2.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -37,11 +39,39 @@ public class WaitingRoomManager {
     }
 
     public ChatRoom endRoom(String userName, String peerUsername) {
-        return chatRoomManager.removeChatRoom(userName, peerUsername);
+        var removedRoom = chatRoomManager.removeChatRoom(userName, peerUsername);
+        if (removedRoom != null) {
+            System.out.println("Saving talk");
+            userApiService.saveTalk(removedRoom.getYourUsername(), removedRoom.getPeerUsername(),
+                    removedRoom.getStartTime(), getTalkDuration(removedRoom.getStartTime()));
+            System.out.println("Ended talk between " + removedRoom.getYourUsername() + " and " + removedRoom.getPeerUsername());
+        }
+        return removedRoom;
     }
 
     public void terminateUserSession(String userName) {
         matchingService.terminateMatchingIfInProcess(userName);
-        chatRoomManager.terminateCharRoomByUsername(userName);
+        var removedRoom = chatRoomManager.terminateChatRoomByUsername(userName);
+        if (removedRoom != null) {
+            System.out.println("Saving talk");
+            userApiService.saveTalk(removedRoom.getYourUsername(), removedRoom.getPeerUsername(),
+                    removedRoom.getStartTime(), getTalkDuration(removedRoom.getStartTime()));
+            System.out.println("Terminated user session by " + userName);
+        }
+    }
+
+    private String getTalkDuration(LocalDateTime startTime) {
+        Duration duration = Duration.between(startTime, LocalDateTime.now());
+
+        long minutes = duration.toMinutes();
+        long seconds = duration.minusMinutes(minutes).getSeconds();
+
+        // constraint: max 5 minutes
+        if (minutes >= 5) {
+            minutes = 5;
+            seconds = 0;
+        }
+
+        return String.format("%02d:%02d", minutes, seconds);
     }
 }
