@@ -3,7 +3,6 @@ package com.videochat.videochatrecommendation2.service;
 import com.videochat.videochatrecommendation2.model.Interests;
 import com.videochat.videochatrecommendation2.model.User;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
 import java.util.List;
@@ -28,16 +27,23 @@ public class MatchingService {
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(20);
 
 
-    public void terminateMatchingIfInProcess(String userName) {
+    public void terminateMatchingIfInProcess(String userName, String peerName) {
         waitingUsersLock.lock();
         usersToJustStartLock.lock();
         try {
             waitingUsers.removeIf(user -> user.username().equals(userName));
             usersToJustStart.removeIf(user -> user.username().equals(userName));
+
+            removeFromWaitingNotification(userName, peerName);
         } finally {
             waitingUsersLock.unlock();
             usersToJustStartLock.unlock();
         }
+    }
+
+    public void removeFromWaitingNotification(String userName, String peerName) {
+        waitingUserNotification.remove(userName);
+        waitingUserNotification.remove(peerName);
     }
 
     // CompletableFuture will contain the peer of current user

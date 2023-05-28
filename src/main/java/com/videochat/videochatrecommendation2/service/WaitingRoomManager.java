@@ -30,33 +30,27 @@ public class WaitingRoomManager {
     public ChatRoom joinRoom(String username) throws ExecutionException, InterruptedException, TimeoutException {
         var user = userApiService.getUserByUsername(username);
 
-        System.out.println("Triggered by " + username + " at " + System.nanoTime());
-
         CompletableFuture<User> peerNotification = matchingService.findPeerForUser(user);
         var peer = peerNotification.get(2, TimeUnit.MINUTES);
 
         return chatRoomManager.createRoomIfNotExistsAndGet(user.username(), peer.username());
     }
 
-    public ChatRoom endRoom(String userName, String peerUsername) {
+    public void endRoom(String userName, String peerUsername) {
         var removedRoom = chatRoomManager.removeChatRoom(userName, peerUsername);
         if (removedRoom != null) {
-            System.out.println("Saving talk");
+            matchingService.removeFromWaitingNotification(userName, removedRoom.getPeerUsername());
             userApiService.saveTalk(removedRoom.getYourUsername(), removedRoom.getPeerUsername(),
                     removedRoom.getStartTime(), getTalkDuration(removedRoom.getStartTime()));
-            System.out.println("Ended talk between " + removedRoom.getYourUsername() + " and " + removedRoom.getPeerUsername());
         }
-        return removedRoom;
     }
 
     public void terminateUserSession(String userName) {
-        matchingService.terminateMatchingIfInProcess(userName);
         var removedRoom = chatRoomManager.terminateChatRoomByUsername(userName);
         if (removedRoom != null) {
-            System.out.println("Saving talk");
+            matchingService.terminateMatchingIfInProcess(userName, removedRoom.getPeerUsername());
             userApiService.saveTalk(removedRoom.getYourUsername(), removedRoom.getPeerUsername(),
                     removedRoom.getStartTime(), getTalkDuration(removedRoom.getStartTime()));
-            System.out.println("Terminated user session by " + userName);
         }
     }
 
